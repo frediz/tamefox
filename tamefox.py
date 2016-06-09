@@ -1,3 +1,4 @@
+#!/usr/bin/env  python
 # tamefox.py - Puts firefox & chromium to sleep when they do not have focus.
 #
 # Requirements: python-xlib python-psutil
@@ -22,7 +23,6 @@
 
 import time
 import psutil
-import psutil.error
 
 from signal import SIGSTOP, SIGCONT
 from Xlib import X, display, Xatom
@@ -78,7 +78,7 @@ def watch(properties):
 
 def wait_for_stop(process):
     while True:
-        if process.status == psutil.STATUS_STOPPED:
+        if process.status() == psutil.STATUS_STOPPED:
             break
 
 
@@ -103,7 +103,7 @@ def tame():
             send_signal(process, SIGSTOP)
             wait_for_stop(process)
             awake.remove(process.pid)
-        except psutil.error.NoSuchProcess:
+        except psutil.NoSuchProcess:
             awake.remove(process.pid)
             del(processes[process.pid])
         finally:
@@ -117,7 +117,7 @@ def tame():
             send_signal(process, SIGCONT)
             if pid not in awake:
                 awake.append(pid)
-        except psutil.error.NoSuchProcess:
+        except psutil.NoSuchProcess:
             del(processes[pid])
             if pid in awake:
                 awake.remove(pid)
@@ -126,7 +126,7 @@ def tame():
         for prop, title, pid, event, parent in watch(['_NET_ACTIVE_WINDOW']):
             try:
                 proc = psutil.Process(pid)
-            except psutil.error.NoSuchProcess:
+            except psutil.NoSuchProcess:
                 continue
             if parent in TAME and pid not in processes:
                 processes[pid] = proc
@@ -147,7 +147,7 @@ def tame():
             try:
                 if process.status == psutil.STATUS_STOPPED:
                     cont(process)
-            except psutil.error.NoSuchProcess:
+            except psutil.NoSuchProcess:
                 pass
 
 
